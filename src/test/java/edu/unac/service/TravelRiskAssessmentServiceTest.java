@@ -294,7 +294,11 @@ class TravelRiskAssessmentServiceTest {
         assertNull(result.getReason());
     }
 
+
     // =========================
     // NEW TESTS HERE
     // =========================
+
+
+
 }

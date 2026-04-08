@@ -1,6 +1,7 @@
 package edu.unac.service.external;
 
 import edu.unac.domain.country.Country;
+import edu.unac.domain.holiday.Holiday;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,12 @@ class CountryClientTest {
         assertEquals(1, result.size());
         assertEquals(50000000, result.getFirst().getPopulation());
         assertEquals("Spanish", result.getFirst().getLanguages().get("spa"));
+    }
+    @Test
+    void shouldReturnNullListCountry(){
+        when(restTemplate.getForObject(anyString(), any())).thenReturn(null);
+        List<Country> result = countryClient.getCountry( "CO");
+        Assertions.assertNotNull(result);
     }
 
     @Test
