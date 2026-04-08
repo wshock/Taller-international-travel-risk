@@ -26,7 +26,7 @@ public class TravelRiskAssessmentService {
         return new TravelRiskResponse();
     }
 
-    public RiskLevel countryValidation(String countryCode, int travelerExperienceYears){
+    public TravelRiskResponse countryValidation(String countryCode, int travelerExperienceYears){
         List<Country> countries = countryClient.getCountry(countryCode);
 
         if (countries == null || countries.isEmpty()) {
@@ -37,12 +37,12 @@ public class TravelRiskAssessmentService {
 
 
         if(country.getPopulation() > 100000000 && travelerExperienceYears < 2){
-            return RiskLevel.HIGH_RISK;
+            return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Destination with high population density and low traveler experience");
 
         } else if (!country.getLanguages().containsKey("eng") || !country.getLanguages().containsKey("spa")){
-            return RiskLevel.MEDIUM_RISK;
+            return new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "The language of the destination may present a barrier");
         } else {
-            return RiskLevel.SAFE;
+            return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
         }
 
 
