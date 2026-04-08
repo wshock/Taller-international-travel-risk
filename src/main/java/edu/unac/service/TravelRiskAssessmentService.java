@@ -28,7 +28,40 @@ public class TravelRiskAssessmentService {
     }
 
     public TravelRiskResponse assessRisk(TravelRequest request) {
-        return new TravelRiskResponse();
+        TravelRiskResponse response = new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
+
+
+
+        // Validaciones iniciales
+
+
+
+        // Evauación del clima
+        if (!(request.getTravelerExperienceYears() > 10)){
+            response = evaluateRiskPriority(
+                    response, // Current response
+                    weatherValidation(request.getLatitude(), request.getLongitude()) // New Weather response
+            );
+        }
+
+        // Evaulación del pais
+        response = evaluateRiskPriority(
+                response, // Current response
+                countryValidation(request.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
+        );
+
+        // Evluación del budget
+
+
+        // ¿Desea reason?
+        if (!request.isIncludeReason()) response.setReason(null);
+
+
+
+
+
+
+        return response;
     }
 
     public TravelRiskResponse weatherValidation(double latitude, double longitude){
@@ -51,6 +84,7 @@ public class TravelRiskAssessmentService {
             throw new ExternalServiceException("Error en la API");
         }
     }
+
     public TravelRiskResponse countryValidation(String countryCode, int travelerExperienceYears){
         List<Country> countries = countryClient.getCountry(countryCode);
 
@@ -64,7 +98,8 @@ public class TravelRiskAssessmentService {
         if(country.getPopulation() > 100000000 && travelerExperienceYears < 2){
             return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Destination with high population density and low traveler experience");
 
-        } else if (!country.getLanguages().containsKey("eng") || !country.getLanguages().containsKey("spa")){
+        }  // HAY UN ERROR AQUÍ
+        else if (!country.getLanguages().containsKey("eng") || !country.getLanguages().containsKey("spa")){
             return new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "The language of the destination may present a barrier");
         } else {
             return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
@@ -88,6 +123,25 @@ public class TravelRiskAssessmentService {
         } catch (Exception e) {
             throw new ExternalServiceException("Error en la API");
         }
+    }
+
+    public TravelRiskResponse evaluateRiskPriority(TravelRiskResponse currentReponse, TravelRiskResponse newResponse){
+        if (newResponse.getRiskLevel() == RiskLevel.HIGH_RISK){
+            return newResponse;
+        }
+
+        else if (newResponse.getRiskLevel() == RiskLevel.MEDIUM_RISK && currentReponse.getRiskLevel() != RiskLevel.HIGH_RISK) {
+            return newResponse;
+        }
+
+        else if (newResponse.getRiskLevel() == RiskLevel.SAFE && currentReponse.getRiskLevel() != RiskLevel.SAFE) {
+            return currentReponse;
+        }
+
+        else {
+            return currentReponse;
+        }
+
     }
 
 }
