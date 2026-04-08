@@ -33,32 +33,15 @@ public class TravelRiskAssessmentService {
 
     public TravelRiskResponse assessRisk(TravelRequest request) {
 
-        List<Holiday> holidays = holidayClient.getHolidays(
-                request.getTravelDate().getYear(),
-                request.getCountryCode()
-        );
-
-        TravelRiskResponse holidayResult = evaluateHolidays(request, holidays);
-
-        if (holidayResult != null) {
-            return new TravelRiskResponse(
-                    holidayResult.getRiskLevel(),
-                    request.isIncludeReason() ? holidayResult.getReason() : null
-            );
-        }
-
-        return new TravelRiskResponse(
-                RiskLevel.SAFE,
-                request.isIncludeReason() ? "Optimal conditions for travel" : null
-        );
-    
-
         TravelRiskResponse response = new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
 
         Country country = this.countryClient.getCountry(request.getCountryCode()).get(0);
 
+        List<Holiday> holidays = holidayClient.getHolidays(
+                request.getTravelDate().getYear(),
+                request.getCountryCode()
+        );
         // Validaciones iniciales
-
 
 
         // Evauación del clima
@@ -75,6 +58,12 @@ public class TravelRiskAssessmentService {
                 countryValidation(country, request.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
         );
 
+        // Evaluación Festivos
+
+        response = evaluateRiskPriority(
+                response,
+                evaluateHolidays(request, holidays)
+        );
         // Evluación del budget
         response = evaluateRiskPriority(
                 response,
@@ -83,11 +72,6 @@ public class TravelRiskAssessmentService {
 
         // ¿Desea reason?
         if (!request.isIncludeReason()) response.setReason(null);
-
-
-
-
-
 
         return response;
     }
@@ -120,7 +104,7 @@ public class TravelRiskAssessmentService {
             );
         }
 
-        return null;
+        return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
     }
 
     public TravelRiskResponse weatherValidation(double latitude, double longitude){
