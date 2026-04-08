@@ -36,7 +36,16 @@ public class TravelRiskAssessmentService {
 
 
         // Evauación del clima
-        weatherValidation(request.getLatitude(), request.getLongitude());
+        TravelRiskResponse weatherRisk = weatherValidation(request.getLatitude(), request.getLongitude());
+        response.setRiskLevel(weatherRisk.getRiskLevel());
+
+        // Evaulación del pais
+        TravelRiskResponse countryRisk = countryValidation(request.getCountryCode(), request.getTravelerExperienceYears());
+
+
+
+
+
         return new TravelRiskResponse();
     }
 
