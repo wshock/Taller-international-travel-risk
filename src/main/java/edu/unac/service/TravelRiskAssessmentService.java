@@ -47,7 +47,7 @@ public class TravelRiskAssessmentService {
         // Evaulación del pais
         response = evaluateRiskPriority(
                 response, // Current response
-                countryValidation(request.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
+                countryValidation(country, request.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
         );
 
         // Evluación del budget
@@ -88,21 +88,14 @@ public class TravelRiskAssessmentService {
         }
     }
 
-    public TravelRiskResponse countryValidation(String countryCode, int travelerExperienceYears){
-        List<Country> countries = countryClient.getCountry(countryCode);
-
-        if (countries == null || countries.isEmpty()) {
-            throw new ExternalServiceException("No se encontró el pais");
-        }
-
-        Country country = countries.get(0);
+    public TravelRiskResponse countryValidation(Country country, String countryCode, int travelerExperienceYears){
 
 
         if(country.getPopulation() > 100000000 && travelerExperienceYears < 2){
             return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Destination with high population density and low traveler experience");
 
         }  // HAY UN ERROR AQUÍ
-        else if (!country.getLanguages().containsKey("eng") || !country.getLanguages().containsKey("spa")){
+        else if (!country.getLanguages().containsKey("eng") && !country.getLanguages().containsKey("spa")){
             return new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "The language of the destination may present a barrier");
         } else {
             return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
