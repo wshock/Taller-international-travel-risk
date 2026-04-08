@@ -28,6 +28,15 @@ public class TravelRiskAssessmentService {
     }
 
     public TravelRiskResponse assessRisk(TravelRequest request) {
+        TravelRiskResponse response = new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
+
+
+        // Validaciones iniciales
+
+
+
+        // Evauación del clima
+        weatherValidation(request.getLatitude(), request.getLongitude());
         return new TravelRiskResponse();
     }
 
@@ -51,6 +60,7 @@ public class TravelRiskAssessmentService {
             throw new ExternalServiceException("Error en la API");
         }
     }
+
     public TravelRiskResponse countryValidation(String countryCode, int travelerExperienceYears){
         List<Country> countries = countryClient.getCountry(countryCode);
 
@@ -70,6 +80,25 @@ public class TravelRiskAssessmentService {
             return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
         }
 
+
+    }
+
+    public TravelRiskResponse evaluateRiskPriority(TravelRiskResponse currentReponse, TravelRiskResponse newResponse){
+        if (newResponse.getRiskLevel() == RiskLevel.HIGH_RISK){
+            return newResponse;
+        }
+
+        else if (newResponse.getRiskLevel() == RiskLevel.MEDIUM_RISK && currentReponse.getRiskLevel() != RiskLevel.HIGH_RISK) {
+            return newResponse;
+        }
+
+        else if (newResponse.getRiskLevel() == RiskLevel.SAFE && currentReponse.getRiskLevel() != RiskLevel.SAFE) {
+            return currentReponse;
+        }
+
+        else {
+            return currentReponse;
+        }
 
     }
 
