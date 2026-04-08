@@ -30,7 +30,7 @@ public class TravelRiskAssessmentService {
     public TravelRiskResponse assessRisk(TravelRequest request) {
         TravelRiskResponse response = new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
 
-
+        Country country = this.countryClient.getCountry(request.getCountryCode()).get(0);
 
         // Validaciones iniciales
 
@@ -51,7 +51,10 @@ public class TravelRiskAssessmentService {
         );
 
         // Evluación del budget
-
+        response = evaluateRiskPriority(
+                response,
+                budgetValidation(country.getPopulation(), request.getBudget())
+        );
 
         // ¿Desea reason?
         if (!request.isIncludeReason()) response.setReason(null);
@@ -99,9 +102,8 @@ public class TravelRiskAssessmentService {
         }
     }
 
-    public TravelRiskResponse budgetValidation(String countryCode, double budget){
+    public TravelRiskResponse budgetValidation(long population, double budget){
         try {
-            long population = this.countryClient.getCountry(countryCode).getFirst().getPopulation();
             TravelRiskResponse budgetHighRiskResponse = new TravelRiskResponse(RiskLevel.HIGH_RISK,"Insufficient budget for the destination");
 
             if (population < 10000000 && budget < 1000) {
