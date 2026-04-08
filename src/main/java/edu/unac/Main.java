@@ -22,6 +22,5 @@ public class Main {
         WeatherClient weatherClient = new WeatherClient(restTemplate);
         HolidayClient holidayClient = new HolidayClient(restTemplate);
         TravelRiskAssessmentService travelRiskAssessmentService = new TravelRiskAssessmentService(weatherClient, holidayClient, countryClient);
-        System.out.println(travelRiskAssessmentService.countryValidation("co", 12));
     }
 }
