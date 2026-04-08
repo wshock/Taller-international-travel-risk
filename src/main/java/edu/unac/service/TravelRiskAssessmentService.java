@@ -47,7 +47,7 @@ public class TravelRiskAssessmentService {
         // Evaulación del pais
         response = evaluateRiskPriority(
                 response, // Current response
-                countryValidation(country, gitrequest.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
+                countryValidation(country, request.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
         );
 
         // Evluación del budget
