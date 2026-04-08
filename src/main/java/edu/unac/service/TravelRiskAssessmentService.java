@@ -94,7 +94,7 @@ public class TravelRiskAssessmentService {
         if(country.getPopulation() > 100000000 && travelerExperienceYears < 2){
             return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Destination with high population density and low traveler experience");
 
-        }  // HAY UN ERROR AQUÍ
+        }
         else if (!country.getLanguages().containsKey("eng") && !country.getLanguages().containsKey("spa")){
             return new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "The language of the destination may present a barrier");
         } else {
