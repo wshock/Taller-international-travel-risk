@@ -69,8 +69,25 @@ public class TravelRiskAssessmentService {
         } else {
             return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
         }
+    }
 
+    public TravelRiskResponse budgetValidation(String countryCode, double budget){
+        try {
+            long population = this.countryClient.getCountry(countryCode).getFirst().getPopulation();
+            TravelRiskResponse budgetHighRiskResponse = new TravelRiskResponse(RiskLevel.HIGH_RISK,"Insufficient budget for the destination");
 
+            if (population < 10000000 && budget < 1000) {
+                return budgetHighRiskResponse;
+            } else if (population > 100000000 && budget < 3000) {
+                return budgetHighRiskResponse;
+            } else if ( population >= 10000000 && population <= 100000000 && budget < 2000) {
+                return budgetHighRiskResponse;
+            } else {
+                return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
+            }
+        } catch (Exception e) {
+            throw new ExternalServiceException("Error en la API");
+        }
     }
 
 }
