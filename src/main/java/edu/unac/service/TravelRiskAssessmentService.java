@@ -31,22 +31,37 @@ public class TravelRiskAssessmentService {
         TravelRiskResponse response = new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
 
 
+
         // Validaciones iniciales
 
 
 
         // Evauación del clima
-        TravelRiskResponse weatherRisk = weatherValidation(request.getLatitude(), request.getLongitude());
-        response.setRiskLevel(weatherRisk.getRiskLevel());
+        if (!(request.getTravelerExperienceYears() > 10)){
+            response = evaluateRiskPriority(
+                    response, // Current response
+                    weatherValidation(request.getLatitude(), request.getLongitude()) // New Weather response
+            );
+        }
 
         // Evaulación del pais
-        TravelRiskResponse countryRisk = countryValidation(request.getCountryCode(), request.getTravelerExperienceYears());
+        response = evaluateRiskPriority(
+                response, // Current response
+                countryValidation(request.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
+        );
+
+        // Evluación del budget
+
+
+        // ¿Desea reason?
+        if (!request.isIncludeReason()) response.setReason(null);
 
 
 
 
 
-        return new TravelRiskResponse();
+
+        return response;
     }
 
     public TravelRiskResponse weatherValidation(double latitude, double longitude){
@@ -83,7 +98,8 @@ public class TravelRiskAssessmentService {
         if(country.getPopulation() > 100000000 && travelerExperienceYears < 2){
             return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Destination with high population density and low traveler experience");
 
-        } else if (!country.getLanguages().containsKey("eng") || !country.getLanguages().containsKey("spa")){
+        }  // HAY UN ERROR AQUÍ
+        else if (!country.getLanguages().containsKey("eng") || !country.getLanguages().containsKey("spa")){
             return new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "The language of the destination may present a barrier");
         } else {
             return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
