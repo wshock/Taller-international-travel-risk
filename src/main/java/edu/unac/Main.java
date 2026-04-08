@@ -1,17 +1,27 @@
 package edu.unac;
 
+import edu.unac.service.TravelRiskAssessmentService;
+import edu.unac.service.external.CountryClient;
+import edu.unac.service.external.HolidayClient;
+import edu.unac.service.external.WeatherClient;
+import org.springframework.web.client.RestTemplate;
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     static void main() {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        IO.println(String.format("Hello and welcome!"));
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            IO.println("i = " + i);
-        }
+
+
+
+
+
+        // Prueba para validar pais
+        RestTemplate restTemplate = new RestTemplate();
+        CountryClient countryClient = new CountryClient(restTemplate);
+        WeatherClient weatherClient = new WeatherClient(restTemplate);
+        HolidayClient holidayClient = new HolidayClient(restTemplate);
+        TravelRiskAssessmentService travelRiskAssessmentService = new TravelRiskAssessmentService(weatherClient, holidayClient, countryClient);
+        System.out.println(travelRiskAssessmentService.countryValidation("co", 12));
     }
 }
