@@ -196,43 +196,6 @@ class TravelRiskAssessmentServiceTest {
     }
 
 
-    // Test nuevo
-    @Test
-    void shouldReturnSafeRiskWhenPopulationHighAndHighExperience(){
-
-        when(weatherClient.getWeather(anyDouble(), anyDouble()))
-                .thenReturn(buildWeather(20, 10));
-        when(holidayClient.getHolidays(anyInt(), anyString()))
-                .thenReturn(List.of());
-        when(countryClient.getCountry(anyString()))
-                .thenReturn(List.of(buildCountry(200_000_000, Map.of("spa", "Spanish"))));
-
-        TravelRiskResponse result = service.assessRisk(
-                buildRequest(true, 20, 5000)
-        );
-
-        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
-        assertEquals("Optimal conditions for travel", result.getReason());
-    }
-
-    @Test
-    void shouldReturnSafeRiskWhenOnlyEnglishIsPresent(){
-
-        when(weatherClient.getWeather(anyDouble(), anyDouble()))
-                .thenReturn(buildWeather(20, 10));
-        when(holidayClient.getHolidays(anyInt(), anyString()))
-                .thenReturn(List.of());
-        when(countryClient.getCountry(anyString()))
-                .thenReturn(List.of(buildCountry(200_000_000, Map.of("eng", "Enlgish"))));
-
-        TravelRiskResponse result = service.assessRisk(
-                buildRequest(true, 20, 5000)
-        );
-
-        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
-        assertEquals("Optimal conditions for travel", result.getReason());
-    }
-
     @Test
     void shouldReturnMediumRiskWhenLanguageNotSupported() {
 
@@ -336,6 +299,87 @@ class TravelRiskAssessmentServiceTest {
     // NEW TESTS HERE
     // =========================
 
+
+
+    // Test nuevos Hanner
+    @Test
+    void shouldReturnSafeRiskWhenPopulationHighAndHighExperience(){
+
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(20, 10));
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(200_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 20, 5000)
+        );
+
+        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+        assertEquals("Optimal conditions for travel", result.getReason());
+    }
+
+    @Test
+    void shouldReturnSafeRiskWhenOnlyEnglishIsPresent(){
+
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(20, 10));
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(200_000_000, Map.of("eng", "Enlgish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 20, 5000)
+        );
+
+        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+        assertEquals("Optimal conditions for travel", result.getReason());
+    }
+
+
+    @Test
+    void shouldReturnSafeWhenPopulationIs100MillionAndLowExperience() {
+
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(20, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(
+                        buildCountry(100_000_000, Map.of("spa", "Spanish"))
+                ));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 1, 5000)
+        );
+
+        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+    }
+
+    @Test
+    void shouldReturnSafeWhenPopulationHighButExperienceIsTwoYears() {
+
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(20, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(
+                        buildCountry(200_000_000, Map.of("spa", "Spanish"))
+                ));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 2, 5000)
+        );
+
+        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+    }
 
 
 }
