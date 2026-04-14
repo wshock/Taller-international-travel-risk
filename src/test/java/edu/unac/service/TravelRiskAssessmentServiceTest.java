@@ -447,4 +447,68 @@ class TravelRiskAssessmentServiceTest {
         assertEquals("Insufficient budget for the destination", result.getReason());
     }
 
+        @Test
+        void shouldReturnSafeWhenHolidaysAreOutsideTravelWeekWindow() {
+                List<Holiday> holidays = List.of(
+                                buildHoliday("2025-12-31"),
+                                buildHoliday("2026-01-09")
+                );
+
+                when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                                .thenReturn(buildWeather(25, 10));
+
+                when(holidayClient.getHolidays(anyInt(), anyString()))
+                                .thenReturn(holidays);
+
+                when(countryClient.getCountry(anyString()))
+                                .thenReturn(List.of(buildCountry(5_000_000, Map.of("spa", "Spanish"))));
+
+                TravelRiskResponse result = service.assessRisk(
+                                buildRequest(true, 5, 5000)
+                );
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnNewResponseWhenNewRiskIsHigh() {
+                TravelRiskResponse current = new TravelRiskResponse(RiskLevel.SAFE, "current");
+                TravelRiskResponse incoming = new TravelRiskResponse(RiskLevel.HIGH_RISK, "incoming");
+
+                TravelRiskResponse result = service.evaluateRiskPriority(current, incoming);
+
+                assertSame(incoming, result);
+        }
+
+        @Test
+        void shouldReturnNewResponseWhenNewRiskIsMediumAndCurrentIsNotHigh() {
+                TravelRiskResponse current = new TravelRiskResponse(RiskLevel.SAFE, "current");
+                TravelRiskResponse incoming = new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "incoming");
+
+                TravelRiskResponse result = service.evaluateRiskPriority(current, incoming);
+
+                assertSame(incoming, result);
+        }
+
+        @Test
+        void shouldKeepCurrentWhenNewRiskIsSafeAndCurrentIsMedium() {
+                TravelRiskResponse current = new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "current");
+                TravelRiskResponse incoming = new TravelRiskResponse(RiskLevel.SAFE, "incoming");
+
+                TravelRiskResponse result = service.evaluateRiskPriority(current, incoming);
+
+                assertSame(current, result);
+        }
+
+        @Test
+        void shouldKeepCurrentWhenCurrentIsHighAndNewIsMedium() {
+                TravelRiskResponse current = new TravelRiskResponse(RiskLevel.HIGH_RISK, "current");
+                TravelRiskResponse incoming = new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "incoming");
+
+                TravelRiskResponse result = service.evaluateRiskPriority(current, incoming);
+
+                assertSame(current, result);
+        }
+
 }
