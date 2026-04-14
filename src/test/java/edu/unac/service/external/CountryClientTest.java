@@ -15,6 +15,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
 
 class CountryClientTest {
     private RestTemplate restTemplate;
@@ -44,6 +45,7 @@ class CountryClientTest {
         assertEquals(1, result.size());
         assertEquals(50000000, result.getFirst().getPopulation());
         assertEquals("Spanish", result.getFirst().getLanguages().get("spa"));
+        verify(restTemplate).getForObject("https://restcountries.com/v3.1/alpha/CO", Country[].class);
     }
     @Test
     void shouldReturnNullListCountry(){
@@ -74,5 +76,6 @@ class CountryClientTest {
         assertEquals(2, result.size());
         assertEquals(1000000, result.getFirst().getPopulation());
         assertEquals(2000000, result.get(1).getPopulation());
+        verify(restTemplate).getForObject("https://restcountries.com/v3.1/alpha/FR", Country[].class);
     }
 }

@@ -311,6 +311,64 @@ class TravelRiskAssessmentServiceTest {
     }
 
     @Test
+    void shouldEvaluateWeatherWhenExperienceIsExactly10() {
+
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(-10, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(5_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 10, 5000)
+        );
+
+        assertEquals(RiskLevel.HIGH_RISK, result.getRiskLevel());
+        assertEquals("Extreme sub-zero temperatures detected", result.getReason());
+    }
+
+    @Test
+    void shouldReturnSafeWhenTemperatureIsExactlyZero() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(0, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(5_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 1, 5000)
+        );
+
+        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+        assertEquals("Optimal conditions for travel", result.getReason());
+    }
+
+    @Test
+    void shouldReturnSafeWhenRainIsExactly80() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(20, 80));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(5_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 1, 5000)
+        );
+
+        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+        assertEquals("Optimal conditions for travel", result.getReason());
+    }
+
+    @Test
     void shouldReturnNullReasonWhenIncludeReasonIsFalse() {
 
         when(weatherClient.getWeather(anyDouble(), anyDouble()))
@@ -466,6 +524,118 @@ class TravelRiskAssessmentServiceTest {
                 TravelRiskResponse result = service.assessRisk(
                                 buildRequest(true, 5, 5000)
                 );
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnSafeWhenAllHolidaysAreBeforeTravelDate() {
+                List<Holiday> holidays = List.of(
+                                buildHoliday("2025-12-25"),
+                                buildHoliday("2025-12-26"),
+                                buildHoliday("2025-12-27")
+                );
+
+                when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                                .thenReturn(buildWeather(25, 10));
+
+                when(holidayClient.getHolidays(anyInt(), anyString()))
+                                .thenReturn(holidays);
+
+                when(countryClient.getCountry(anyString()))
+                                .thenReturn(List.of(buildCountry(5_000_000, Map.of("spa", "Spanish"))));
+
+                TravelRiskResponse result = service.assessRisk(
+                                buildRequest(true, 5, 5000)
+                );
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnSafeWhenAllHolidaysAreAfterTravelWeek() {
+                List<Holiday> holidays = List.of(
+                                buildHoliday("2026-01-09"),
+                                buildHoliday("2026-01-10"),
+                                buildHoliday("2026-01-11")
+                );
+
+                when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                                .thenReturn(buildWeather(25, 10));
+
+                when(holidayClient.getHolidays(anyInt(), anyString()))
+                                .thenReturn(holidays);
+
+                when(countryClient.getCountry(anyString()))
+                                .thenReturn(List.of(buildCountry(5_000_000, Map.of("spa", "Spanish"))));
+
+                TravelRiskResponse result = service.assessRisk(
+                                buildRequest(true, 5, 5000)
+                );
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnSafeWhenPopulationIsExactly100MAndExperienceIsLow() {
+                when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                                .thenReturn(buildWeather(25, 10));
+
+                when(holidayClient.getHolidays(anyInt(), anyString()))
+                                .thenReturn(List.of());
+
+                when(countryClient.getCountry(anyString()))
+                                .thenReturn(List.of(buildCountry(100_000_000, Map.of("spa", "Spanish"))));
+
+                TravelRiskResponse result = service.assessRisk(
+                                buildRequest(true, 1, 5000)
+                );
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnSafeWhenPopulationIsHighAndExperienceIsExactlyTwo() {
+                when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                                .thenReturn(buildWeather(25, 10));
+
+                when(holidayClient.getHolidays(anyInt(), anyString()))
+                                .thenReturn(List.of());
+
+                when(countryClient.getCountry(anyString()))
+                                .thenReturn(List.of(buildCountry(200_000_000, Map.of("spa", "Spanish"))));
+
+                TravelRiskResponse result = service.assessRisk(
+                                buildRequest(true, 2, 5000)
+                );
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnSafeWhenBudgetIsExactlyMinimumForSmallPopulation() {
+                TravelRiskResponse result = service.budgetValidation(5_000_000, 1000);
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnSafeWhenBudgetIsExactlyMinimumForHighPopulation() {
+                TravelRiskResponse result = service.budgetValidation(150_000_000, 3000);
+
+                assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+                assertEquals("Optimal conditions for travel", result.getReason());
+        }
+
+        @Test
+        void shouldReturnSafeWhenPopulationIsExactly100MAndBudgetIs2500() {
+                TravelRiskResponse result = service.budgetValidation(100_000_000, 2500);
 
                 assertEquals(RiskLevel.SAFE, result.getRiskLevel());
                 assertEquals("Optimal conditions for travel", result.getReason());

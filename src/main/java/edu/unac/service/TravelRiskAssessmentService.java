@@ -12,8 +12,6 @@ import edu.unac.service.external.HolidayClient;
 import edu.unac.service.external.WeatherClient;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,7 +43,7 @@ public class TravelRiskAssessmentService {
 
 
         // Evauación del clima
-        if (!(request.getTravelerExperienceYears() > 10)){
+        if (request.getTravelerExperienceYears() <= 10) {
             response = evaluateRiskPriority(
                     response, // Current response
                     weatherValidation(request.getLatitude(), request.getLongitude()) // New Weather response
@@ -55,7 +53,7 @@ public class TravelRiskAssessmentService {
         // Evaulación del pais
         response = evaluateRiskPriority(
                 response, // Current response
-                countryValidation(country, request.getCountryCode(), request.getTravelerExperienceYears()) // New Country response
+                countryValidation(country, request.getTravelerExperienceYears()) // New Country response
         );
 
         // Evaluación Festivos
@@ -107,28 +105,26 @@ public class TravelRiskAssessmentService {
         return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
     }
 
-    public TravelRiskResponse weatherValidation(double latitude, double longitude){
-        try {
-            WeatherResponse weatherResponse = this.weatherClient.getWeather(latitude, longitude);
-            if (weatherResponse == null) throw new ExternalServiceException("Error en la API");
-
-            double max_temperature = Collections.max(weatherResponse.getDaily().getTemperature_2m_max());
-            if (max_temperature < 0) {
-                return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Extreme sub-zero temperatures detected");
-            }
-
-            double max_precipitation = Collections.max(weatherResponse.getDaily().getPrecipitation_probability_max());
-            if (max_precipitation > 80) {
-                return new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "High probability of rain during the trip");
-            }
-
-            return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
-        } catch (Exception e) {
+    public TravelRiskResponse weatherValidation(double latitude, double longitude) {
+        WeatherResponse weatherResponse = this.weatherClient.getWeather(latitude, longitude);
+        if (weatherResponse == null) {
             throw new ExternalServiceException("Error en la API");
         }
+
+        double max_temperature = Collections.max(weatherResponse.getDaily().getTemperature_2m_max());
+        if (max_temperature < 0) {
+            return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Extreme sub-zero temperatures detected");
+        }
+
+        double max_precipitation = Collections.max(weatherResponse.getDaily().getPrecipitation_probability_max());
+        if (max_precipitation > 80) {
+            return new TravelRiskResponse(RiskLevel.MEDIUM_RISK, "High probability of rain during the trip");
+        }
+
+        return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
     }
 
-    public TravelRiskResponse countryValidation(Country country, String countryCode, int travelerExperienceYears){
+    public TravelRiskResponse countryValidation(Country country, int travelerExperienceYears) {
 
 
         if(country.getPopulation() > 100000000 && travelerExperienceYears < 2){
@@ -142,22 +138,27 @@ public class TravelRiskAssessmentService {
         }
     }
 
-    public TravelRiskResponse budgetValidation(long population, double budget){
+    public TravelRiskResponse budgetValidation(long population, double budget) {
+        double minimumRequiredBudget = minimumBudgetByPopulation(population);
 
-        TravelRiskResponse budgetHighRiskResponse = new TravelRiskResponse(RiskLevel.HIGH_RISK,"Insufficient budget for the destination");
-
-        if (population < 10000000 && budget < 1000) {
-            return budgetHighRiskResponse;
-        } else if (population > 100000000 && budget < 3000) {
-            return budgetHighRiskResponse;
-        } else if ( population >= 10000000 && population <= 100000000 && budget < 2000) {
-            return budgetHighRiskResponse;
-        } else {
-            return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
+        if (budget < minimumRequiredBudget) {
+            return new TravelRiskResponse(RiskLevel.HIGH_RISK, "Insufficient budget for the destination");
         }
+
+        return new TravelRiskResponse(RiskLevel.SAFE, "Optimal conditions for travel");
     }
 
-    public TravelRiskResponse evaluateRiskPriority(TravelRiskResponse currentReponse, TravelRiskResponse newResponse){
+    private double minimumBudgetByPopulation(long population) {
+        if (population < 10_000_000) {
+            return 1000;
+        }
+        if (population <= 100_000_000) {
+            return 2000;
+        }
+        return 3000;
+    }
+
+    public TravelRiskResponse evaluateRiskPriority(TravelRiskResponse currentReponse, TravelRiskResponse newResponse) {
         if (newResponse.getRiskLevel() == RiskLevel.HIGH_RISK){
             return newResponse;
         }
@@ -166,13 +167,7 @@ public class TravelRiskAssessmentService {
             return newResponse;
         }
 
-        else if (newResponse.getRiskLevel() == RiskLevel.SAFE && currentReponse.getRiskLevel() != RiskLevel.SAFE) {
-            return currentReponse;
-        }
-
-        else {
-            return currentReponse;
-        }
+        return currentReponse;
 
     }
 
