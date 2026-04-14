@@ -1,5 +1,6 @@
 package edu.unac.service;
 
+import edu.unac.domain.exception.ExternalServiceException;
 import edu.unac.domain.holiday.Holiday;
 import edu.unac.domain.travel.RiskLevel;
 import edu.unac.domain.travel.TravelRequest;
@@ -18,13 +19,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class TravelRiskAssessmentServiceTest {
     private WeatherClient weatherClient;
@@ -336,6 +334,117 @@ class TravelRiskAssessmentServiceTest {
     // NEW TESTS HERE
     // =========================
 
+    @Test
+    void shouldThrowExceptionIfWeatherResponseIsNull() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(null);
 
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(5_000_000, Map.of("spa", "Spanish"))));
+
+
+        assertThrows(ExternalServiceException.class,
+                () -> service.assessRisk(buildRequest(true, 5, 5000)));
+    }
+
+    @Test
+    void shouldReturnHighRiskIfPopulationGreaterThan100MAndBudgetLessThan3000() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(25, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(200_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 5, 2000)
+        );
+
+        assertEquals(RiskLevel.HIGH_RISK, result.getRiskLevel());
+        assertEquals("Insufficient budget for the destination", result.getReason());
+
+    }
+
+    @Test
+    void shouldReturnHighRiskIfPopulationGBetween10MAnd100MAndBudgetLessThan2000() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(25, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(90_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 5, 1000)
+        );
+
+        assertEquals(RiskLevel.HIGH_RISK, result.getRiskLevel());
+        assertEquals("Insufficient budget for the destination", result.getReason());
+
+    }
+
+    @Test
+    void shouldReturnSafeIfPopulationBetween10MAnd100MAndBudgetIsAtLeast2000() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(25, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(90_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 5, 2000)
+        );
+
+        assertEquals(RiskLevel.SAFE, result.getRiskLevel());
+        assertEquals("Optimal conditions for travel", result.getReason());
+    }
+
+    @Test
+    void shouldReturnHighRiskIfPopulationIsExactly10MAndBudgetLessThan2000() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(25, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(10_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 5, 1500)
+        );
+
+        assertEquals(RiskLevel.HIGH_RISK, result.getRiskLevel());
+        assertEquals("Insufficient budget for the destination", result.getReason());
+    }
+
+    @Test
+    void shouldReturnHighRiskIfPopulationIsExactly100MAndBudgetLessThan2000() {
+        when(weatherClient.getWeather(anyDouble(), anyDouble()))
+                .thenReturn(buildWeather(25, 10));
+
+        when(holidayClient.getHolidays(anyInt(), anyString()))
+                .thenReturn(List.of());
+
+        when(countryClient.getCountry(anyString()))
+                .thenReturn(List.of(buildCountry(100_000_000, Map.of("spa", "Spanish"))));
+
+        TravelRiskResponse result = service.assessRisk(
+                buildRequest(true, 5, 1500)
+        );
+
+        assertEquals(RiskLevel.HIGH_RISK, result.getRiskLevel());
+        assertEquals("Insufficient budget for the destination", result.getReason());
+    }
 
 }
