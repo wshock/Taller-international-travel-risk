@@ -43,6 +43,7 @@ public class HolidayClientTest {
         when(restTemplate.getForObject(anyString(), any())).thenReturn(null);
         List<Holiday> result = HolidayClient.getHolidays(2026, "CO");
         Assertions.assertNotNull(result);
+        Assertions.assertEquals(0, result.size());
 
     }
     @Test
